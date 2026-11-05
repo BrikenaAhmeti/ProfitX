@@ -2,14 +2,26 @@
   "info": {
     "_postman_id": "7b09c34a-8338-4b64-9d8d-e3f5bd0be961",
     "name": "ProfitX API",
-    "description": "Koleksion lokal per health, regjistrim dhe hyrje. Perdorni vetem databaze lokale dhe te dhena prove.",
+    "description": "ProfitX: health, auth dhe CRUD me validim per kliente, furnitore dhe kategori. Ekzekuto koleksionin sipas rendit ne databaze testimi.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:5000" },
-    { "key": "testName", "value": "Postman Test User" },
-    { "key": "testEmail", "value": "" },
-    { "key": "samplePassword", "value": "DemoPass123" }
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "testName",
+      "value": "Postman Test User"
+    },
+    {
+      "key": "testEmail",
+      "value": ""
+    },
+    {
+      "key": "samplePassword",
+      "value": "DemoPass123"
+    }
   ],
   "item": [
     {
@@ -78,12 +90,19 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"{{testName}}\",\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{samplePassword}}\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": "{{baseUrl}}/api/auth/register",
             "description": "Krijon perdorues prove. Email-i unik krijohet automatikisht para cdo ekzekutimi."
@@ -94,12 +113,19 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": "{{baseUrl}}/api/auth/register",
             "description": "Pret 400 dhe gabime per name, email dhe password."
@@ -133,12 +159,19 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{samplePassword}}\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": "{{baseUrl}}/api/auth/login",
             "description": "Ekzekuto pas Regjistrim i suksesshem ne te njejtin koleksion."
@@ -157,7 +190,8 @@
                   "  pm.expect(body.success).to.eql(true);",
                   "  pm.expect(body.data.token).to.be.a('string').and.not.empty;",
                   "  pm.collectionVariables.set('authToken', body.data.token);",
-                  "});"
+                  "});",
+                  "pm.collectionVariables.set('authUserId', pm.response.json().data.user.id);"
                 ]
               }
             }
@@ -168,12 +202,19 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": "{{baseUrl}}/api/auth/login",
             "description": "Pret 400 dhe gabime per email dhe password."
@@ -202,12 +243,19 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"KredencialGabim123\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": "{{baseUrl}}/api/auth/login",
             "description": "Ekzekuto pas regjistrimit prove; pret 401 dhe mesazh per kredenciale te pasakta."
@@ -224,6 +272,1313 @@
                   "pm.test('Pergjigjja nuk zbulon nese email-i ekziston', function () {",
                   "  pm.expect(pm.response.json().message).to.eql('Email ose fjalekalim i pasakte');",
                   "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Kliente",
+      "item": [
+        {
+          "name": "Pa token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/clients"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Pa token: status 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Krijimi",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Postman {{$guid}}\", \"email\": \"{{$guid}}@example.test\", \"phone\": \"+383 44 123 456\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Krijimi: status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Rekordi i krijuar', () => { const row = pm.response.json().data.client; pm.expect(row.userId).to.eql(pm.collectionVariables.get('authUserId')); pm.expect(row.name).to.be.a('string').and.not.empty; pm.collectionVariables.set('clientId', row.id); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listimi",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Listimi: status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Vetem rekordet e perdoruesit', () => { const rows = pm.response.json().data; pm.expect(rows).to.be.an('array'); pm.expect(rows.some(row => row.id === pm.collectionVariables.get('clientId'))).to.eql(true); rows.forEach(row => pm.expect(row.userId).to.eql(pm.collectionVariables.get('authUserId'))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Leximi sipas ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients/{{clientId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Leximi sipas ID: status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ID e sakte', () => pm.expect(pm.response.json().data.client.id).to.eql(pm.collectionVariables.get('clientId')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Emri bosh",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"   \", \"email\": \"{{$guid}}@example.test\", \"phone\": \"+383 44 123 456\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('POST Emri bosh: status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Gabim i qarte per name', () => { const error = pm.response.json().errors.find(error => error.field === 'name'); pm.expect(error).to.be.an('object'); pm.expect(error.message).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Email i pavlefshem",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Postman {{$guid}}\", \"email\": \"invalid\", \"phone\": \"+383 44 123 456\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('POST Email i pavlefshem: status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Gabim i qarte per email', () => { const error = pm.response.json().errors.find(error => error.field === 'email'); pm.expect(error).to.be.an('object'); pm.expect(error.message).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT Emri bosh",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients/{{clientId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"   \", \"email\": \"{{$guid}}@example.test\", \"phone\": \"+383 44 123 456\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('PUT Emri bosh: status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Gabim i qarte per name', () => { const error = pm.response.json().errors.find(error => error.field === 'name'); pm.expect(error).to.be.an('object'); pm.expect(error.message).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT Email i pavlefshem",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients/{{clientId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Postman {{$guid}}\", \"email\": \"invalid\", \"phone\": \"+383 44 123 456\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('PUT Email i pavlefshem: status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Gabim i qarte per email', () => { const error = pm.response.json().errors.find(error => error.field === 'email'); pm.expect(error).to.be.an('object'); pm.expect(error.message).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Perditesimi",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients/{{clientId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Postman updated\", \"phone\": null}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Perditesimi: status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Vlerat e perditesuara', () => pm.expect(pm.response.json().data.client.name).to.eql('Postman updated'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fshirja",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients/{{clientId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Fshirja: status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET rekord i fshire",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients/{{clientId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('GET rekord i fshire: status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT rekord i fshire",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients/{{clientId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Postman updated\", \"phone\": null}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('PUT rekord i fshire: status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE rekord i fshire",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients/{{clientId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('DELETE rekord i fshire: status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ID e pavlefshme",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients/invalid-id"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('ID e pavlefshme: status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Furnitore",
+      "item": [
+        {
+          "name": "Pa token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/suppliers"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Pa token: status 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Krijimi",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/suppliers",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Postman {{$guid}}\", \"email\": \"{{$guid}}@example.test\", \"phone\": \"+383 44 123 456\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Krijimi: status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Rekordi i krijuar', () => { const row = pm.response.json().data.supplier; pm.expect(row.userId).to.eql(pm.collectionVariables.get('authUserId')); pm.expect(row.name).to.be.a('string').and.not.empty; pm.collectionVariables.set('supplierId', row.id); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listimi",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/suppliers"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Listimi: status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Vetem rekordet e perdoruesit', () => { const rows = pm.response.json().data; pm.expect(rows).to.be.an('array'); pm.expect(rows.some(row => row.id === pm.collectionVariables.get('supplierId'))).to.eql(true); rows.forEach(row => pm.expect(row.userId).to.eql(pm.collectionVariables.get('authUserId'))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Leximi sipas ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/suppliers/{{supplierId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Leximi sipas ID: status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ID e sakte', () => pm.expect(pm.response.json().data.supplier.id).to.eql(pm.collectionVariables.get('supplierId')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Emri bosh",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/suppliers",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"   \", \"email\": \"{{$guid}}@example.test\", \"phone\": \"+383 44 123 456\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('POST Emri bosh: status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Gabim i qarte per name', () => { const error = pm.response.json().errors.find(error => error.field === 'name'); pm.expect(error).to.be.an('object'); pm.expect(error.message).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Email i pavlefshem",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/suppliers",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Postman {{$guid}}\", \"email\": \"invalid\", \"phone\": \"+383 44 123 456\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('POST Email i pavlefshem: status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Gabim i qarte per email', () => { const error = pm.response.json().errors.find(error => error.field === 'email'); pm.expect(error).to.be.an('object'); pm.expect(error.message).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT Emri bosh",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/suppliers/{{supplierId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"   \", \"email\": \"{{$guid}}@example.test\", \"phone\": \"+383 44 123 456\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('PUT Emri bosh: status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Gabim i qarte per name', () => { const error = pm.response.json().errors.find(error => error.field === 'name'); pm.expect(error).to.be.an('object'); pm.expect(error.message).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT Email i pavlefshem",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/suppliers/{{supplierId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Postman {{$guid}}\", \"email\": \"invalid\", \"phone\": \"+383 44 123 456\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('PUT Email i pavlefshem: status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Gabim i qarte per email', () => { const error = pm.response.json().errors.find(error => error.field === 'email'); pm.expect(error).to.be.an('object'); pm.expect(error.message).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Perditesimi",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/suppliers/{{supplierId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Postman updated\", \"phone\": null}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Perditesimi: status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Vlerat e perditesuara', () => pm.expect(pm.response.json().data.supplier.name).to.eql('Postman updated'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fshirja",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/suppliers/{{supplierId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Fshirja: status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET rekord i fshire",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/suppliers/{{supplierId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('GET rekord i fshire: status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT rekord i fshire",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/suppliers/{{supplierId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Postman updated\", \"phone\": null}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('PUT rekord i fshire: status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE rekord i fshire",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/suppliers/{{supplierId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('DELETE rekord i fshire: status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ID e pavlefshme",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/suppliers/invalid-id"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('ID e pavlefshme: status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Kategori",
+      "item": [
+        {
+          "name": "Pa token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/categories"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Pa token: status 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Krijimi",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Postman {{$guid}}\", \"type\": \"te ardhura\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Krijimi: status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Rekordi i krijuar', () => { const row = pm.response.json().data.category; pm.expect(row.userId).to.eql(pm.collectionVariables.get('authUserId')); pm.expect(row.name).to.be.a('string').and.not.empty; pm.collectionVariables.set('categoryId', row.id); });",
+                  "pm.test('Normalizimi INCOME', () => pm.expect(pm.response.json().data.category.type).to.eql('INCOME'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listimi",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Listimi: status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Vetem rekordet e perdoruesit', () => { const rows = pm.response.json().data; pm.expect(rows).to.be.an('array'); pm.expect(rows.some(row => row.id === pm.collectionVariables.get('categoryId'))).to.eql(true); rows.forEach(row => pm.expect(row.userId).to.eql(pm.collectionVariables.get('authUserId'))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Leximi sipas ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories/{{categoryId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Leximi sipas ID: status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ID e sakte', () => pm.expect(pm.response.json().data.category.id).to.eql(pm.collectionVariables.get('categoryId')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Emri bosh",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"   \", \"type\": \"te ardhura\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('POST Emri bosh: status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Gabim i qarte per name', () => { const error = pm.response.json().errors.find(error => error.field === 'name'); pm.expect(error).to.be.an('object'); pm.expect(error.message).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Lloji i pavlefshem",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Postman {{$guid}}\", \"type\": \"INVALID\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('POST Lloji i pavlefshem: status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Gabim i qarte per type', () => { const error = pm.response.json().errors.find(error => error.field === 'type'); pm.expect(error).to.be.an('object'); pm.expect(error.message).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT Emri bosh",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories/{{categoryId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"   \", \"type\": \"te ardhura\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('PUT Emri bosh: status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Gabim i qarte per name', () => { const error = pm.response.json().errors.find(error => error.field === 'name'); pm.expect(error).to.be.an('object'); pm.expect(error.message).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT Lloji i pavlefshem",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories/{{categoryId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Postman {{$guid}}\", \"type\": \"INVALID\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('PUT Lloji i pavlefshem: status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Gabim i qarte per type', () => { const error = pm.response.json().errors.find(error => error.field === 'type'); pm.expect(error).to.be.an('object'); pm.expect(error.message).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Perditesimi",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories/{{categoryId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Postman updated\", \"type\": \"shpenzim\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Perditesimi: status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Vlerat e perditesuara', () => pm.expect(pm.response.json().data.category.name).to.eql('Postman updated'));",
+                  "pm.test('Normalizimi EXPENSE', () => pm.expect(pm.response.json().data.category.type).to.eql('EXPENSE'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fshirja",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories/{{categoryId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Fshirja: status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET rekord i fshire",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories/{{categoryId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('GET rekord i fshire: status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT rekord i fshire",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories/{{categoryId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Postman updated\", \"type\": \"shpenzim\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('PUT rekord i fshire: status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE rekord i fshire",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories/{{categoryId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('DELETE rekord i fshire: status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ID e pavlefshme",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories/invalid-id"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('ID e pavlefshme: status 400', () => pm.response.to.have.status(400));"
                 ]
               }
             }

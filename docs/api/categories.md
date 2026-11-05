@@ -126,3 +126,15 @@ Pranon te njejtat fusha si krijimi, me `name` dhe `type` te detyrueshem.
 - Cdo veprim kufizohet me `userId` te marre nga token-i, jo nga trupi i kerkeses.
 - Kategoria e nje perdoruesi tjeter kthehet gjithmone `404`, qofte per lexim, ndryshim ose fshirje.
 - Perdoruesi nuk mund te krijoje dy kategori me te njejtin emer dhe lloj.
+
+## Validimi i POST dhe PUT
+
+Te dyja rrugat perdorin `category.validators.js`. Emri qe mungon, eshte bosh ose permban vetem hapesira kthen `400`, me `errors` per fushen `name` dhe mesazhin `Emri eshte i detyrueshem.`. Lloji i pavlefshem, p.sh. `OTHER`, kthen `400` me gabim per fushen `type`. PUT kerkon si emrin ashtu edhe llojin.
+
+Lloji normalizohet pa dallim shkronjash te medha/vogla dhe me heqjen e hapesirave anash. Pranohen `INCOME`, `EXPENSE`, `te ardhura`, `te_ardhura`, `shpenzim` dhe `shpenzime`; ne databaze ruhen vetem `INCOME` ose `EXPENSE`.
+
+## Testet Postman
+
+Koleksioni `backend/tests/postman/ProfitX-API.postman_collection.json` permban regjistrimin, hyrjen dhe rastet per kliente, furnitore e kategori. Token-i dhe ID-te ruhen automatikisht gjate ekzekutimit. Ekzekuto koleksionin e plote sipas rendit.
+
+Nga `backend`, ekzekuto `node tests/postman/run-collection.cjs --mock` per kontrollin HTTP me databaze te simuluar, ose `node tests/postman/run-collection.cjs` per databaze reale me `.env` te konfiguruar. Udhezimet dhe pastrimi i te dhenave dokumentohen ne `backend/tests/postman/README.md`.
