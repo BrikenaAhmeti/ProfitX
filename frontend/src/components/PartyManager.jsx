@@ -68,13 +68,13 @@ export default function PartyManager({ title, singular, endpoint }) {
       return
     }
 
-        const payload = {
+    const payload = {
       name,
       email,
       phone: form.phone.trim(),
       address: form.address.trim(),
     }
-    
+
     setSaving(true)
     try {
       if (editingId) {
