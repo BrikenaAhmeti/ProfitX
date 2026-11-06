@@ -103,6 +103,7 @@ model Transaction {
   supplier Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
 
   @@index([userId, occurredAt])
+  @@index([userId, type, occurredAt])
   @@index([categoryId])
 }
 
