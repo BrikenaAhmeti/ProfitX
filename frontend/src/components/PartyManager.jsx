@@ -11,11 +11,12 @@ function extractList(data) {
 }
 
 function errorMessage(err) {
-  return (
-    err.response?.data?.message ||
-    err.response?.data?.error ||
-    'Ndodhi një gabim. Provoni përsëri.'
-  )
+  if (!err.response) return 'Nuk u lidh me serverin.'
+  const data = err.response.data
+  if (Array.isArray(data?.errors) && data.errors.length > 0) {
+    return data.errors.map((e) => e.message).join(' ')
+  }
+  return data?.message || data?.error || 'Ndodhi një gabim. Provoni përsëri.'
 }
 
 export default function PartyManager({ title, singular, endpoint }) {
@@ -67,10 +68,12 @@ export default function PartyManager({ title, singular, endpoint }) {
       return
     }
 
-    const payload = { name }
-    if (email) payload.email = email
-    if (form.phone.trim()) payload.phone = form.phone.trim()
-    if (form.address.trim()) payload.address = form.address.trim()
+    const payload = {
+      name,
+      email,
+      phone: form.phone.trim(),
+      address: form.address.trim(),
+    }
 
     setSaving(true)
     try {
