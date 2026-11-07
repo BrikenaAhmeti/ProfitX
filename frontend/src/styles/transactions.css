@@ -19,3 +19,8 @@
 .tx-summary__income { color: #166534; }
 .tx-summary__expense { color: #991b1b; }
 .tx-table__delete { padding: 4px 10px; border: none; border-radius: 6px; background: #dc2626; color: #fff; cursor: pointer; }
+
+.tx-table-wrap { overflow-x: auto; }
+.tx-table { min-width: 720px; }
+.tx-page__empty { padding: 16px; text-align: center; color: #6b7280; }
+@media (max-width: 640px) { .tx-summary { grid-template-columns: 1fr; } .tx-filter select { width: 100%; } }
