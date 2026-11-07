@@ -10,13 +10,21 @@ const todayString = () => new Date().toISOString().slice(0, 10);
 const toList = (payload) => {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.data)) return payload.data;
+  if (payload?.data && typeof payload.data === "object") {
+    const nested = Object.values(payload.data).find(Array.isArray);
+    if (nested) return nested;
+  }
   return [];
 };
+
+const fetchList = async (url) => toList((await api.get(url)).data);
 
 const buildInitialValues = (initialData) => ({
   type: initialData?.type ?? "",
   amount: initialData?.amount != null ? String(initialData.amount) : "",
   categoryId: initialData?.categoryId ?? initialData?.category?.id ?? "",
+  clientId: initialData?.clientId ?? initialData?.client?.id ?? "",
+  supplierId: initialData?.supplierId ?? initialData?.supplier?.id ?? "",
   occurredAt: initialData?.occurredAt
     ? String(initialData.occurredAt).slice(0, 10)
     : todayString(),
@@ -57,7 +65,9 @@ export default function TransactionForm({ initialData = null, onSaved, onCancel 
   const [fieldErrors, setFieldErrors] = useState({});
   const [formError, setFormError] = useState("");
   const [categories, setCategories] = useState([]);
-  const [categoriesError, setCategoriesError] = useState("");
+  const [clients, setClients] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [listsError, setListsError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -68,14 +78,21 @@ export default function TransactionForm({ initialData = null, onSaved, onCancel 
 
   useEffect(() => {
     let cancelled = false;
-    api
-      .get("/categories")
-      .then((response) => {
-        if (!cancelled) setCategories(toList(response.data));
-      })
-      .catch(() => {
-        if (!cancelled) setCategoriesError("Kategoritë nuk u ngarkuan.");
-      });
+    Promise.allSettled([
+      fetchList("/categories"),
+      fetchList("/clients"),
+      fetchList("/suppliers"),
+    ]).then(([cat, cli, sup]) => {
+      if (cancelled) return;
+      const failed = [];
+      if (cat.status === "fulfilled") setCategories(cat.value);
+      else failed.push("kategoritë");
+      if (cli.status === "fulfilled") setClients(cli.value);
+      else failed.push("klientët");
+      if (sup.status === "fulfilled") setSuppliers(sup.value);
+      else failed.push("furnitorët");
+      setListsError(failed.length ? `Nuk u ngarkuan: ${failed.join(", ")}.` : "");
+    });
     return () => {
       cancelled = true;
     };
@@ -88,6 +105,8 @@ export default function TransactionForm({ initialData = null, onSaved, onCancel 
     setValues((prev) => {
       const next = { ...prev, [name]: value };
       if (name === "type" && prev.type !== value) next.categoryId = "";
+      if (name === "clientId" && value) next.supplierId = "";
+      if (name === "supplierId" && value) next.clientId = "";
       return next;
     });
     setFieldErrors((prev) => ({ ...prev, [name]: undefined }));
@@ -108,6 +127,13 @@ export default function TransactionForm({ initialData = null, onSaved, onCancel 
       occurredAt: new Date(values.occurredAt).toISOString(),
       ...(description ? { description } : {}),
     };
+    if (isEdit) {
+      payload.clientId = values.clientId || null;
+      payload.supplierId = values.supplierId || null;
+    } else {
+      if (values.clientId) payload.clientId = values.clientId;
+      if (values.supplierId) payload.supplierId = values.supplierId;
+    }
 
     setSubmitting(true);
     setFormError("");
@@ -144,7 +170,7 @@ export default function TransactionForm({ initialData = null, onSaved, onCancel 
       </h3>
 
       {formError && <div className="tx-form__error" role="alert">{formError}</div>}
-      {categoriesError && <div className="tx-form__error" role="alert">{categoriesError}</div>}
+      {listsError && <div className="tx-form__error" role="alert">{listsError}</div>}
 
       <div className="tx-form__grid">
         <label className="tx-form__field">
@@ -175,6 +201,26 @@ export default function TransactionForm({ initialData = null, onSaved, onCancel 
           {fieldErrors.categoryId && (
             <small className="tx-form__field-error">{fieldErrors.categoryId}</small>
           )}
+        </label>
+
+        <label className="tx-form__field">
+          <span>Klienti (opsionale)</span>
+          <select name="clientId" value={values.clientId} onChange={handleChange} disabled={submitting}>
+            <option value="">Pa klient</option>
+            {clients.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="tx-form__field">
+          <span>Furnitori (opsionale)</span>
+          <select name="supplierId" value={values.supplierId} onChange={handleChange} disabled={submitting}>
+            <option value="">Pa furnitor</option>
+            {suppliers.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
         </label>
 
         <label className="tx-form__field">
