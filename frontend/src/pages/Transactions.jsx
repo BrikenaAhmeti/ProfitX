@@ -26,6 +26,8 @@ const getErrorMessage = (error) =>
     ? error.response.data?.message || "Ndodhi një gabim. Provoni përsëri."
     : "Serveri nuk është i arritshëm. Provoni përsëri më vonë.";
 
+const formatMoney = (value) => Number(value).toFixed(2);
+
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -79,6 +81,18 @@ export default function Transactions() {
     );
   }, [transactions, filter]);
 
+  const totals = useMemo(() => {
+    let income = 0;
+    let expense = 0;
+    for (const t of rows) {
+      const amount = Number(t.amount);
+      if (!Number.isFinite(amount)) continue;
+      if (t.type === "INCOME") income += amount;
+      else if (t.type === "EXPENSE") expense += amount;
+    }
+    return { income, expense, balance: income - expense };
+  }, [rows]);
+
   const categoryName = (t) => t.category?.name ?? categoryMap.get(t.categoryId) ?? "—";
   const partyName = (t) =>
     t.client?.name ??
@@ -100,6 +114,18 @@ export default function Transactions() {
   const handleEdit = (transaction) => {
     setEditing(transaction);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDelete = async (transaction) => {
+    if (!window.confirm("Të fshihet ky transaksion?")) return;
+    setError("");
+    try {
+      await api.delete(`${TRANSACTIONS_ENDPOINT}/${transaction.id}`);
+      if (editing?.id === transaction.id) setEditing(null);
+      await loadTransactions();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
   };
 
   return (
@@ -125,6 +151,21 @@ export default function Transactions() {
           <option value="INCOME">Të ardhura</option>
           <option value="EXPENSE">Shpenzime</option>
         </select>
+      </div>
+
+      <div className="tx-summary">
+        <div className="tx-summary__card">
+          <span>Të ardhura</span>
+          <strong className="tx-summary__income">{formatMoney(totals.income)}</strong>
+        </div>
+        <div className="tx-summary__card">
+          <span>Shpenzime</span>
+          <strong className="tx-summary__expense">{formatMoney(totals.expense)}</strong>
+        </div>
+        <div className="tx-summary__card">
+          <span>Diferenca</span>
+          <strong>{formatMoney(totals.balance)}</strong>
+        </div>
       </div>
 
       {loading ? (
@@ -156,11 +197,14 @@ export default function Transactions() {
                   <td>{TYPE_LABELS[t.type] ?? t.type}</td>
                   <td>{categoryName(t)}</td>
                   <td>{partyName(t)}</td>
-                  <td className="tx-table__num">{Number(t.amount).toFixed(2)}</td>
+                  <td className="tx-table__num">{formatMoney(t.amount)}</td>
                   <td>{t.description || "—"}</td>
                   <td>
                     <button type="button" className="tx-table__edit" onClick={() => handleEdit(t)}>
                       Ndrysho
+                    </button>{" "}
+                    <button type="button" className="tx-table__delete" onClick={() => handleDelete(t)}>
+                      Fshi
                     </button>
                   </td>
                 </tr>
