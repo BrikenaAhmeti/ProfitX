@@ -11,3 +11,11 @@
 .tx-table__edit { background: #fff; border: 1px solid #d1d5db; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
 .tx-filter { margin: 12px 0; }
 .tx-filter select { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; }
+
+.tx-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 12px 0 16px; }
+.tx-summary__card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.tx-summary__card span { font-size: 13px; color: #6b7280; }
+.tx-summary__card strong { font-size: 18px; }
+.tx-summary__income { color: #166534; }
+.tx-summary__expense { color: #991b1b; }
+.tx-table__delete { padding: 4px 10px; border: none; border-radius: 6px; background: #dc2626; color: #fff; cursor: pointer; }
