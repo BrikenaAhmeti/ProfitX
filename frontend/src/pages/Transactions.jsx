@@ -169,11 +169,12 @@ export default function Transactions() {
       </div>
 
       {loading ? (
-        <p className="tx-page__empty">Duke ngarkuar...</p>
+      
+      <p className="tx-page__empty" role="status">Duke ngarkuar...</p>
       ) : rows.length === 0 ? (
         <p className="tx-page__empty">
           {transactions.length === 0
-            ? "Nuk ka transaksione ende."
+             ? "Nuk ka transaksione ende. Shtoni të parin me formularin më sipër."
             : "Nuk ka transaksione për këtë filtër."}
         </p>
       ) : (
