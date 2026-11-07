@@ -34,6 +34,7 @@ export default function Transactions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [editing, setEditing] = useState(null);
+  const [filter, setFilter] = useState("ALL");
 
   const loadTransactions = useCallback(async () => {
     setTransactions(await fetchList(TRANSACTIONS_ENDPOINT));
@@ -70,13 +71,13 @@ export default function Transactions() {
   const clientMap = useMemo(() => toNameMap(clients), [clients]);
   const supplierMap = useMemo(() => toNameMap(suppliers), [suppliers]);
 
-  const rows = useMemo(
-    () =>
-      [...transactions].sort((a, b) =>
-        String(b.occurredAt).localeCompare(String(a.occurredAt))
-      ),
-    [transactions]
-  );
+  const rows = useMemo(() => {
+    const list =
+      filter === "ALL" ? transactions : transactions.filter((t) => t.type === filter);
+    return [...list].sort((a, b) =>
+      String(b.occurredAt).localeCompare(String(a.occurredAt))
+    );
+  }, [transactions, filter]);
 
   const categoryName = (t) => t.category?.name ?? categoryMap.get(t.categoryId) ?? "—";
   const partyName = (t) =>
@@ -113,10 +114,27 @@ export default function Transactions() {
 
       {error && <div className="tx-page__error" role="alert">{error}</div>}
 
+      <div className="tx-filter">
+        <label htmlFor="tx-type-filter">Filtro sipas llojit: </label>
+        <select
+          id="tx-type-filter"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        >
+          <option value="ALL">Të gjitha</option>
+          <option value="INCOME">Të ardhura</option>
+          <option value="EXPENSE">Shpenzime</option>
+        </select>
+      </div>
+
       {loading ? (
         <p className="tx-page__empty">Duke ngarkuar...</p>
       ) : rows.length === 0 ? (
-        <p className="tx-page__empty">Nuk ka transaksione ende.</p>
+        <p className="tx-page__empty">
+          {transactions.length === 0
+            ? "Nuk ka transaksione ende."
+            : "Nuk ka transaksione për këtë filtër."}
+        </p>
       ) : (
         <div className="tx-table-wrap">
           <table className="tx-table">

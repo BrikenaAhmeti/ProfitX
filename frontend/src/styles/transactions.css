@@ -9,3 +9,5 @@
 .tx-table th.tx-table__num,
 .tx-table td.tx-table__num { text-align: right; }
 .tx-table__edit { background: #fff; border: 1px solid #d1d5db; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.tx-filter { margin: 12px 0; }
+.tx-filter select { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; }
