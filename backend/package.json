@@ -10,8 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "verify:categories": "node scripts/verify-categories.cjs",
     "postinstall": "prisma skills sync || exit 0",
-    "db:check": "node scripts/db-check.cjs",
-    "db:seed": "node prisma/seed.js"
+    "db:check": "node scripts/db-check.cjs"
   },
   "keywords": [],
   "author": "",
