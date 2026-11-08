@@ -5,14 +5,32 @@ const mock = process.argv.includes('--mock');
 if (mock) {
   const model = () => {
     const rows = new Map();
-    const match = (row, where) => Object.entries(where).every(([key, value]) => row[key] === value);
+    const matchesValue = (actual, expected) => {
+      if (expected instanceof Date) return new Date(actual).getTime() === expected.getTime();
+      if (expected && typeof expected === 'object') {
+        if (expected.in) return expected.in.includes(actual);
+        if (expected.gte !== undefined && actual < expected.gte) return false;
+        if (expected.lt !== undefined && actual >= expected.lt) return false;
+        return true;
+      }
+      return actual === expected;
+    };
+    const match = (row, where = {}) => Object.entries(where).every(([key, value]) => matchesValue(row[key], value));
     const find = where => [...rows.values()].find(row => match(row, where));
     return {
       findUnique: async ({ where }) => find(where) || null,
       findFirst: async ({ where }) => find(where) || null,
-      findMany: async ({ where }) => [...rows.values()].filter(row => match(row, where)),
+      findMany: async ({ where, orderBy = [] }) => [...rows.values()].filter(row => match(row, where))
+        .sort((a, b) => {
+          for (const order of orderBy) {
+            const [field, direction] = Object.entries(order)[0];
+            if (a[field] < b[field]) return direction === 'desc' ? 1 : -1;
+            if (a[field] > b[field]) return direction === 'desc' ? -1 : 1;
+          }
+          return 0;
+        }),
       create: async ({ data }) => {
-        const row = { id: randomUUID(), ...data };
+        const row = { id: randomUUID(), createdAt: new Date(), occurredAt: new Date(), ...data };
         rows.set(row.id, row);
         return row;
       },
@@ -28,9 +46,14 @@ if (mock) {
         rows.delete(row.id);
         return row;
       },
+      deleteMany: async ({ where }) => {
+        let count = 0;
+        for (const [id, row] of rows) if (match(row, where)) { rows.delete(id); count++; }
+        return { count };
+      },
     };
   };
-  const prisma = { user: model(), client: model(), supplier: model(), category: model(), $queryRaw: async () => [{ value: 1 }] };
+  const prisma = { user: model(), client: model(), supplier: model(), category: model(), transaction: model(), $queryRaw: async () => [{ value: 1 }] };
   require.cache[require.resolve('../../src/config/database')] = { exports: prisma };
   process.env.JWT_SECRET = randomUUID();
 }
