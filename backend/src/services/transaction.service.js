@@ -253,9 +253,52 @@ function handlePrismaError(error) {
 /**
  * Kthen vetem transaksionet e perdoruesit te kycur, me te fundit i pari.
  */
-async function list(userId) {
+// Query: type, categoryId, dateFrom, dateTo. Dates use YYYY-MM-DD in UTC;
+// dateTo includes the whole day through an exclusive next-day boundary.
+function buildListFilters(filters) {
+  const where = {};
+  const errors = [];
+  if (filters.type !== undefined) {
+    const type = normalizeType(filters.type);
+    if (!TRANSACTION_TYPES.includes(type)) {
+      errors.push({ field: 'type', message: 'Lloji duhet te jete INCOME ose EXPENSE.' });
+    } else where.type = type;
+  }
+  if (filters.categoryId !== undefined) {
+    if (typeof filters.categoryId !== 'string' || !UUID_REGEX.test(filters.categoryId)) {
+      errors.push({ field: 'categoryId', message: 'Kategoria duhet te jete UUID e vlefshme.' });
+    } else where.categoryId = filters.categoryId;
+  }
+  const dates = {};
+  for (const field of ['dateFrom', 'dateTo']) {
+    if (filters[field] === undefined) continue;
+    const value = filters[field];
+    const date = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
+      ? new Date(`${value}T00:00:00.000Z`) : null;
+    if (!date || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
+      errors.push({ field, message: 'Data duhet te jete date e vlefshme ne formatin YYYY-MM-DD.' });
+    } else dates[field] = date;
+  }
+  if (dates.dateFrom && dates.dateTo && dates.dateFrom > dates.dateTo) {
+    errors.push({ field: 'dateTo', message: 'Data deri duhet te jete e njejte ose pas dates nga.' });
+  }
+  if (errors.length) throw new ApiError(400, 'Filtrat e transaksioneve jane te pavlefshem.', errors);
+  if (dates.dateFrom || dates.dateTo) {
+    where.occurredAt = {};
+    if (dates.dateFrom) where.occurredAt.gte = dates.dateFrom;
+    if (dates.dateTo) {
+      const end = new Date(dates.dateTo);
+      end.setUTCDate(end.getUTCDate() + 1);
+      where.occurredAt.lt = end;
+    }
+  }
+  return where;
+}
+
+async function list(userId, filters = {}) {
+  const where = buildListFilters(filters);
   return prisma.transaction.findMany({
-    where: { userId },
+    where: { ...where, userId },
     orderBy: [{ occurredAt: 'desc' }, { createdAt: 'desc' }],
   });
 }

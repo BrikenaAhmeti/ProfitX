@@ -6,7 +6,7 @@ const transactionService = require('../services/transaction.service');
  */
 async function list(req, res, next) {
   try {
-    const transactions = await transactionService.list(req.user.id);
+    const transactions = await transactionService.list(req.user.id, req.query);
 
     return res.status(200).json({
       success: true,
