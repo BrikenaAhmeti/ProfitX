@@ -1686,6 +1686,756 @@
           ]
         },
         {
+          "name": "Regjistro perdoruesin B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman User B\",\n  \"email\": \"{{isolationEmail}}\",\n  \"password\": \"{{samplePassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const id = pm.variables.replaceIn('{{$guid}}');",
+                  "pm.collectionVariables.set('isolationEmail', `postman-${id}@example.test`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Regjistrimi i perdoruesit B kthen 201', () => pm.response.to.have.status(201));",
+                  "pm.expect(pm.response.json().data.user.email).to.eql(pm.collectionVariables.get('isolationEmail'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Hyr si perdoruesi B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{isolationEmail}}\",\n  \"password\": \"{{samplePassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Hyrja e perdoruesit B kthen 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('authTokenB', pm.response.json().data.token);",
+                  "pm.expect(pm.response.json().data.token).to.be.a('string').and.not.empty;"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Krijo kategorine e perdoruesit B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authTokenB}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman User B Income\",\n  \"type\": \"INCOME\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Kategoria e perdoruesit B kthen 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('isolationCategoryId', pm.response.json().data.category.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Krijo klientin e perdoruesit B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authTokenB}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman User B Client\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Klienti i perdoruesit B kthen 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('isolationClientId', pm.response.json().data.client.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Krijo transaksionin e perdoruesit B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authTokenB}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/transactions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"50.00\",\n  \"type\": \"INCOME\",\n  \"categoryId\": \"{{isolationCategoryId}}\",\n  \"clientId\": \"{{isolationClientId}}\",\n  \"description\": \"Transaksion privat i perdoruesit B\",\n  \"occurredAt\": \"2026-11-05T10:00:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Krijimi i transaksionit te B kthen 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('isolationTransactionId', pm.response.json().data.transaction.id);",
+                  "pm.expect(pm.response.json().data.transaction.clientId).to.eql(pm.collectionVariables.get('isolationClientId'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A nuk e lexon transaksionin e B",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/transactions/{{isolationTransactionId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('GET i transaksionit te B kthen 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A nuk e ndryshon transaksionin e B",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/transactions/{{isolationTransactionId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"99.00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('PUT i transaksionit te B kthen 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A nuk e fshin transaksionin e B",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/transactions/{{isolationTransactionId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('DELETE i transaksionit te B kthen 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A nuk perdor kategorine e B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/transactions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"10.00\",\n  \"type\": \"INCOME\",\n  \"categoryId\": \"{{isolationCategoryId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Kategoria e huaj refuzohet me 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.success).to.eql(false);",
+                  "pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "pm.expect(body.message).to.include('Kategoria');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A nuk perdor klientin e B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/transactions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"10.00\",\n  \"type\": \"INCOME\",\n  \"categoryId\": \"{{transactionIncomeCategoryId}}\",\n  \"clientId\": \"{{isolationClientId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Klienti i huaj refuzohet me 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.success).to.eql(false);",
+                  "pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "pm.expect(body.message).to.include('Klienti');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Shuma zero",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/transactions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 0,\n  \"type\": \"INCOME\",\n  \"categoryId\": \"{{transactionIncomeCategoryId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Shuma zero kthen 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.success).to.eql(false);",
+                  "pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "pm.expect(body.errors.map((error) => error.field)).to.include('amount');",
+                  "pm.expect(body.errors.find((error) => error.field === 'amount').message).to.be.a('string').and.not.empty;"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Shuma negative",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/transactions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"-1.00\",\n  \"type\": \"INCOME\",\n  \"categoryId\": \"{{transactionIncomeCategoryId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Shuma negative kthen 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.success).to.eql(false);",
+                  "pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "pm.expect(body.errors.map((error) => error.field)).to.include('amount');",
+                  "pm.expect(body.errors.find((error) => error.field === 'amount').message).to.be.a('string').and.not.empty;"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Shuma mbi kufirin Decimal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/transactions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"10000000000.00\",\n  \"type\": \"INCOME\",\n  \"categoryId\": \"{{transactionIncomeCategoryId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Shuma mbi kufirin Decimal kthen 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.success).to.eql(false);",
+                  "pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "pm.expect(body.errors.map((error) => error.field)).to.include('amount');",
+                  "pm.expect(body.errors.find((error) => error.field === 'amount').message).to.be.a('string').and.not.empty;"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me shume se dy shifra pas presjes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/transactions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"12.345\",\n  \"type\": \"INCOME\",\n  \"categoryId\": \"{{transactionIncomeCategoryId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Me shume se dy shifra pas presjes kthen 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.success).to.eql(false);",
+                  "pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "pm.expect(body.errors.map((error) => error.field)).to.include('amount');",
+                  "pm.expect(body.errors.find((error) => error.field === 'amount').message).to.be.a('string').and.not.empty;"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Data kalendarike e pavlefshme",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/transactions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"10.00\",\n  \"type\": \"INCOME\",\n  \"categoryId\": \"{{transactionIncomeCategoryId}}\",\n  \"occurredAt\": \"2026-02-30\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Data e pavlefshme kthen 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "pm.expect(body.errors.map((error) => error.field)).to.include('occurredAt');",
+                  "pm.expect(body.errors.find((error) => error.field === 'occurredAt').message).to.be.a('string').and.not.empty;"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fushat e detyrueshme mungojne",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/transactions",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Fushat e detyrueshme qe mungojne kthejne 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.success).to.eql(false);",
+                  "pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "const fields = body.errors.map((error) => error.field);",
+                  "pm.expect(fields).to.include.members(['amount', 'type', 'categoryId']);",
+                  "pm.expect(body.errors.every((error) => typeof error.message === 'string' && error.message.length > 0)).to.eql(true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Data ne te ardhmen pranohet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/transactions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"1.00\",\n  \"type\": \"INCOME\",\n  \"categoryId\": \"{{transactionIncomeCategoryId}}\",\n  \"occurredAt\": \"2099-12-31T23:59:59Z\",\n  \"description\": \"Prove date e ardhshme\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Data e ardhshme pranohet sipas kontrates aktuale', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.success).to.eql(true);",
+                  "pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "pm.collectionVariables.set('futureTransactionId', body.data.transaction.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pastro transaksionin me daten e ardhshme",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/transactions/{{futureTransactionId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Pastrimi i transaksionit te ardhshem kthen 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pastro transaksionin e perdoruesit B",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authTokenB}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/transactions/{{isolationTransactionId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Perdoruesi B pastron transaksionin e vet', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pastro klientin e perdoruesit B",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authTokenB}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clients/{{isolationClientId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Perdoruesi B pastron klientin e vet', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pastro kategorine e perdoruesit B",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authTokenB}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/categories/{{isolationCategoryId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Perdoruesi B pastron kategorine e vet', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Krijo transaksion INCOME",
           "request": {
             "method": "POST",

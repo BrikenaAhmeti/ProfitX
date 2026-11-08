@@ -9,7 +9,7 @@ Base URL lokale: `http://localhost:5000`. Te gjitha rrugat kerkojne `Authorizati
 | `amount` | Po | Numer ose tekst numerik pozitiv, maksimumi dy shifra pas presjes dhe `9999999999.99` (`Decimal(12,2)`) |
 | `type` | Po | `INCOME` ose `EXPENSE`; pranohen edhe aliaset si `te ardhura` dhe `shpenzim` |
 | `categoryId` | Po | UUID e nje kategorie te perdoruesit te kycur |
-| `occurredAt` | Jo | Date ISO `YYYY-MM-DD` ose timestamp me timezone, p.sh. `2026-11-08T10:00:00Z`; kur mungon perdoret koha aktuale |
+| `occurredAt` | Jo | Date ISO `YYYY-MM-DD` ose timestamp me timezone, p.sh. `2026-11-08T10:00:00Z`; kur mungon perdoret koha aktuale. Cdo date ISO e vlefshme pranohet, edhe ne te ardhmen. |
 | `description` | Jo | Tekst me maksimumi 500 karaktere ose `null` |
 | `clientId` | Jo | UUID e klientit te perdoruesit ose `null` |
 | `supplierId` | Jo | UUID e furnitorit te perdoruesit ose `null` |
