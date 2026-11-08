@@ -89,8 +89,9 @@ erDiagram
 - `type` is required and uses `TransactionType` (`INCOME` or `EXPENSE`).
 - `amount` is required and stored as `Decimal(12, 2)`.
 - `occurredAt` is required and defaults to the current timestamp; `createdAt` records when the row was created.
-- `categoryId` is required and references one category. Deleting a referenced category is restricted.
-- `clientId` and `supplierId` are nullable optional references. Deleting the linked client or supplier sets that reference to `NULL`.
+- `userId` is required. Deleting the owning user cascades and deletes that user's transactions.
+- `categoryId` is required and references one category. Deleting a category that a transaction references is restricted, so the transaction remains intact.
+- `clientId` and `supplierId` are nullable optional references. Deleting the linked client or supplier keeps the transaction and sets the corresponding reference to `NULL`.
 - The application-level convention is to associate income with a client and expenses with a supplier. The current schema does not enforce that pairing as a database constraint.
 
 ## Other relationships and delete behavior
@@ -107,7 +108,7 @@ erDiagram
 - `User.email` has a unique index for login and duplicate prevention.
 - `Client` and `Supplier` have unique compound indexes on `(userId, email)` and regular indexes on `(userId, name)`. These support per-user email checks and user-scoped name listing. Their leading `userId` columns also support user-scoped lookups.
 - `Category` has a unique compound index on `(userId, name, type)`.
-- `Transaction` has indexes on `(userId, occurredAt)` and `categoryId`.
+- `Transaction` has indexes on `(userId, occurredAt)`, `(userId, type, occurredAt)`, and `categoryId`.
 - `Invoice` has a unique compound index on `(userId, invoiceNumber)` and an index on `(clientId, issueDate)`.
 - `InvoiceItem` has an index on `invoiceId`.
 

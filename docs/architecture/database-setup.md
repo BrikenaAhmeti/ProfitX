@@ -74,3 +74,20 @@ The initial schema includes `User`, `Client`, `Supplier`, `Category`, `Transacti
 
 - [Prisma 7 migrate dev](https://www.prisma.io/docs/cli/v7/migrate/dev)
 - [Neon: Manage databases](https://neon.com/docs/manage/databases)
+
+## Verify seeded transactions
+
+The demo seed also creates one income and one expense transaction for `demo@profitx.local`, using the seeded `Shitje` and `Shpenzime operative` categories, `Klienti Demo`, and `Furnitori Demo`. The transaction records are keyed by the demo user's ID, description, and fixed occurrence timestamp, so repeated seed runs do not create duplicates.
+
+In Neon's SQL Editor, confirm the transactions with:
+
+```sql
+SELECT t.type, t.amount, t.description, t."occurredAt"
+FROM "Transaction" t
+JOIN "User" u ON u.id = t."userId"
+WHERE u.email = 'demo@profitx.local'
+  AND t.description LIKE 'Seed:%'
+ORDER BY t."occurredAt";
+```
+
+The query should return one `INCOME` and one `EXPENSE` row. Run `npm run db:seed` twice and confirm the query still returns only those two rows.
