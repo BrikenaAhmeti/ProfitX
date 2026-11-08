@@ -81,9 +81,11 @@ async function main() {
     await new Promise(resolve => server.close(resolve));
     if (!mock) {
       try {
-        const email = summary?.collection.variables.get('testEmail');
-        if (email && /^postman-[0-9a-f-]+@example\.test$/.test(email)) {
-          await prisma.user.deleteMany({ where: { email } });
+        const emails = ['testEmail', 'isolationEmail']
+          .map(key => summary?.collection.variables.get(key))
+          .filter(email => /^postman-[0-9a-f-]+@example\.test$/.test(email || ''));
+        if (emails.length) {
+          await prisma.user.deleteMany({ where: { email: { in: emails } } });
         }
       } finally { await prisma.$disconnect(); }
     }
