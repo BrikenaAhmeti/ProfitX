@@ -2,7 +2,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
 import ProtectedRoute from './routes/ProtectedRoute';
-import Login from './pages/login.jsx';
+import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Clients from './pages/Clients.jsx';
 import Suppliers from './pages/Suppliers.jsx';
