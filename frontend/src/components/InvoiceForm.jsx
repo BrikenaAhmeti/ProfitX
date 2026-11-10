@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import api from '../api/api'
 import '../styles/invoice-form.css'
 
 const INVOICES_ENDPOINT = '/invoices'
 const CLIENTS_ENDPOINT = '/clients'
 const MAX_INVOICE_NUMBER = 50
+const MAX_ITEM_DESCRIPTION = 300
 
 const INVOICE_STATUSES = ['DRAFT', 'SENT', 'PAID', 'OVERDUE', 'CANCELLED']
 
@@ -45,7 +46,56 @@ const buildInitialValues = (initialData) => ({
   status: initialData?.status ?? 'DRAFT',
 })
 
-const validate = (values) => {
+const parseQuantityForTotal = (value) => {
+  const trimmed = String(value).trim()
+  if (!trimmed || !/^\d+(\.\d{1,3})?$/.test(trimmed)) return null
+  const n = Number(trimmed)
+  if (!(n > 0)) return null
+  return n
+}
+
+const parseUnitPriceForTotal = (value) => {
+  const trimmed = String(value).trim()
+  if (!trimmed || !/^\d+(\.\d{1,2})?$/.test(trimmed)) return null
+  const n = Number(trimmed)
+  if (!(n > 0)) return null
+  return n
+}
+
+const computeTotalCents = (rows) => {
+  let cents = 0
+  for (const row of rows) {
+    const quantity = parseQuantityForTotal(row.quantity)
+    const unitPrice = parseUnitPriceForTotal(row.unitPrice)
+    if (quantity == null || unitPrice == null) continue
+    cents += Math.round(quantity * unitPrice * 100)
+  }
+  return cents
+}
+
+const formatTotal = (cents) => (cents / 100).toFixed(2)
+
+const buildInitialItems = (initialData, createRowId) => {
+  const list = initialData?.items
+  if (Array.isArray(list) && list.length > 0) {
+    return list.map((item) => ({
+      rowId: createRowId(),
+      description: item.description ?? '',
+      quantity: item.quantity != null ? String(item.quantity) : '1',
+      unitPrice: item.unitPrice != null ? String(item.unitPrice) : '',
+    }))
+  }
+  return [createEmptyItemRow(createRowId)]
+}
+
+const createEmptyItemRow = (createRowId) => ({
+  rowId: createRowId(),
+  description: '',
+  quantity: '1',
+  unitPrice: '',
+})
+
+const validateInvoiceFields = (values) => {
   const errors = {}
 
   if (!values.clientId) {
@@ -74,30 +124,77 @@ const validate = (values) => {
   return errors
 }
 
+const validateItemRows = (rows) => {
+  const errors = {}
+
+  rows.forEach((row) => {
+    const rowErrors = {}
+    const description = row.description.trim()
+
+    if (!description) {
+      rowErrors.description = 'Përshkrimi është i detyrueshëm.'
+    } else if (description.length > MAX_ITEM_DESCRIPTION) {
+      rowErrors.description = `Përshkrimi mund të ketë deri në ${MAX_ITEM_DESCRIPTION} karaktere.`
+    }
+
+    const quantity = row.quantity.trim()
+    if (!quantity) {
+      rowErrors.quantity = 'Sasia është e detyrueshme.'
+    } else if (!/^\d+(\.\d{1,3})?$/.test(quantity) || Number(quantity) <= 0) {
+      rowErrors.quantity = 'Sasia duhet të jetë numër më i madh se zero.'
+    }
+
+    const unitPrice = row.unitPrice.trim()
+    if (!unitPrice) {
+      rowErrors.unitPrice = 'Çmimi për njësi është i detyrueshëm.'
+    } else if (!/^\d+(\.\d{1,2})?$/.test(unitPrice) || Number(unitPrice) <= 0) {
+      rowErrors.unitPrice = 'Çmimi për njësi duhet të jetë numër më i madh se zero.'
+    }
+
+    if (Object.keys(rowErrors).length > 0) {
+      errors[row.rowId] = rowErrors
+    }
+  })
+
+  return errors
+}
+
 const buildPayload = (values) => {
   const invoiceNumber = values.invoiceNumber.trim()
-  const payload = {
+  return {
     clientId: values.clientId,
     invoiceNumber,
     status: values.status,
     issueDate: values.issueDate,
     dueDate: values.dueDate || null,
   }
-  return payload
 }
 
 export default function InvoiceForm({ initialData = null, onSaved, onCancel }) {
   const isEdit = Boolean(initialData?.id)
+  const rowIdRef = useRef(0)
+  const createRowId = () => {
+    rowIdRef.current += 1
+    return `inv-item-${rowIdRef.current}`
+  }
+
   const [values, setValues] = useState(() => buildInitialValues(initialData))
+  const [items, setItems] = useState(() => buildInitialItems(initialData, createRowId))
   const [fieldErrors, setFieldErrors] = useState({})
+  const [itemErrors, setItemErrors] = useState({})
   const [formError, setFormError] = useState('')
   const [clients, setClients] = useState([])
   const [clientsError, setClientsError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+  const totalCents = useMemo(() => computeTotalCents(items), [items])
+
   useEffect(() => {
+    rowIdRef.current = 0
     setValues(buildInitialValues(initialData))
+    setItems(buildInitialItems(initialData, createRowId))
     setFieldErrors({})
+    setItemErrors({})
     setFormError('')
   }, [initialData?.id])
 
@@ -122,25 +219,65 @@ export default function InvoiceForm({ initialData = null, onSaved, onCancel }) {
     setFormError('')
   }
 
+  const handleItemChange = (rowId, field, value) => {
+    setItems((prev) =>
+      prev.map((row) => (row.rowId === rowId ? { ...row, [field]: value } : row)),
+    )
+    setItemErrors((prev) => ({
+      ...prev,
+      [rowId]: prev[rowId] ? { ...prev[rowId], [field]: undefined } : undefined,
+    }))
+    setFormError('')
+  }
+
+  const handleAddItem = () => {
+    setItems((prev) => [...prev, createEmptyItemRow(createRowId)])
+    setFormError('')
+  }
+
+  const handleRemoveItem = (rowId) => {
+    setItems((prev) => prev.filter((row) => row.rowId !== rowId))
+    setItemErrors((prev) => {
+      const next = { ...prev }
+      delete next[rowId]
+      return next
+    })
+    setFormError('')
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault()
-    const errors = validate(values)
-    setFieldErrors(errors)
-    if (Object.keys(errors).length > 0) return
+    setFormError('')
+
+    if (items.length === 0) {
+      setFormError('Shto të paktën një artikull.')
+      return
+    }
+
+    const invoiceErrors = validateInvoiceFields(values)
+    const rowErrors = validateItemRows(items)
+    setFieldErrors(invoiceErrors)
+    setItemErrors(rowErrors)
+
+    if (Object.keys(invoiceErrors).length > 0 || Object.keys(rowErrors).length > 0) {
+      return
+    }
 
     const payload = buildPayload(values)
 
     setSubmitting(true)
-    setFormError('')
     try {
       const response = isEdit
         ? await api.put(`${INVOICES_ENDPOINT}/${initialData.id}`, payload)
         : await api.post(INVOICES_ENDPOINT, payload)
       const saved = response.data?.data ?? response.data
       if (!isEdit) {
+        rowIdRef.current = 0
         setValues(buildInitialValues(null))
+        setItems([createEmptyItemRow(createRowId)])
       }
       setFieldErrors({})
+      setItemErrors({})
       if (onSaved) onSaved(saved)
     } catch (error) {
       if (!error.response) {
@@ -256,6 +393,86 @@ export default function InvoiceForm({ initialData = null, onSaved, onCancel }) {
             ))}
           </select>
         </label>
+      </div>
+
+      <div className="inv-form__items">
+        <h4 className="inv-form__items-title">Artikujt</h4>
+
+        {items.map((row) => (
+          <div key={row.rowId} className="inv-form__item-row">
+            <label className="inv-form__field inv-form__field--grow">
+              <span>Përshkrimi *</span>
+              <input
+                type="text"
+                maxLength={MAX_ITEM_DESCRIPTION}
+                value={row.description}
+                onChange={(e) => handleItemChange(row.rowId, 'description', e.target.value)}
+                disabled={submitting}
+              />
+              {itemErrors[row.rowId]?.description && (
+                <small className="inv-form__field-error">
+                  {itemErrors[row.rowId].description}
+                </small>
+              )}
+            </label>
+
+            <label className="inv-form__field">
+              <span>Sasia *</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={row.quantity}
+                onChange={(e) => handleItemChange(row.rowId, 'quantity', e.target.value)}
+                disabled={submitting}
+              />
+              {itemErrors[row.rowId]?.quantity && (
+                <small className="inv-form__field-error">
+                  {itemErrors[row.rowId].quantity}
+                </small>
+              )}
+            </label>
+
+            <label className="inv-form__field">
+              <span>Çmimi për njësi *</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={row.unitPrice}
+                onChange={(e) => handleItemChange(row.rowId, 'unitPrice', e.target.value)}
+                disabled={submitting}
+              />
+              {itemErrors[row.rowId]?.unitPrice && (
+                <small className="inv-form__field-error">
+                  {itemErrors[row.rowId].unitPrice}
+                </small>
+              )}
+            </label>
+
+            <div className="inv-form__item-actions">
+              <button
+                type="button"
+                className="inv-form__remove-item"
+                onClick={() => handleRemoveItem(row.rowId)}
+                disabled={submitting}
+              >
+                Hiq
+              </button>
+            </div>
+          </div>
+        ))}
+
+        <button
+          type="button"
+          className="inv-form__add-item"
+          onClick={handleAddItem}
+          disabled={submitting}
+        >
+          Shto artikull
+        </button>
+
+        <p className="inv-form__total" aria-live="polite">
+          Totali: {formatTotal(totalCents)}
+        </p>
       </div>
 
       <div className="inv-form__actions">
