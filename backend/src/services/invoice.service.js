@@ -70,7 +70,7 @@ function parseDate(value, { field, allowNull = false }) {
     throw new ApiError(400, `${field} nuk eshte e vlefshme`);
   }
 
-  const date = value instanceof Date ? value : new Date(value);
+  const date = value instanceof Date ? value : new Date(value.trim());
   if (Number.isNaN(date.getTime())) {
     throw new ApiError(400, `${field} nuk eshte e vlefshme`);
   }
@@ -227,7 +227,8 @@ async function assertOwnedClient(userId, clientId) {
 
 function assertDateOrder(issueDate, dueDate) {
   if (issueDate && dueDate && dueDate < issueDate) {
-    throw new ApiError(400, 'Afati nuk mund te jete para dates se leshimit');
+    const message = 'Afati nuk mund te jete para dates se leshimit';
+    throw new ApiError(400, message, [{ field: 'dueDate', message }]);
   }
 }
 

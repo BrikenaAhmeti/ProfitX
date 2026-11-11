@@ -1,6 +1,8 @@
 const express = require('express');
 const invoiceController = require('../controllers/invoice.controller');
 const { authenticate } = require('../middleware/auth.middleware');
+const validate = require('../middleware/validate.middleware');
+const { validateCreateInvoice, validateUpdateInvoice } = require('../validators/invoice.validators');
 
 const router = express.Router();
 
@@ -8,9 +10,9 @@ const router = express.Router();
 router.use(authenticate);
 
 router.get('/', invoiceController.list);
-router.post('/', invoiceController.create);
+router.post('/', validate(validateCreateInvoice), invoiceController.create);
 router.get('/:id', invoiceController.getById);
-router.put('/:id', invoiceController.update);
+router.put('/:id', validate(validateUpdateInvoice), invoiceController.update);
 router.delete('/:id', invoiceController.remove);
 
 module.exports = router;
