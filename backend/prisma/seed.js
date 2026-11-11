@@ -118,7 +118,69 @@ async function main() {
     });
   }
 
-  console.log('Seed-i përfundoi: 1 përdorues, 2 kategori, 2 klientë, 2 furnitorë dhe 2 transaksione.');
+  const invoices = [
+    {
+      invoiceNumber: 'F-2026-0001',
+      clientEmail: 'klienti@profitx.local',
+      status: 'PAID',
+      issueDate: new Date('2026-01-15T00:00:00.000Z'),
+      dueDate: new Date('2026-01-30T00:00:00.000Z'),
+      items: [{ description: 'Seed: sherbim web', quantity: '1', unitPrice: '1250.00' }],
+    },
+    {
+      invoiceNumber: 'F-2026-0002',
+      clientEmail: 'shembull@profitx.local',
+      status: 'SENT',
+      issueDate: new Date('2026-02-01T00:00:00.000Z'),
+      dueDate: new Date('2026-02-15T00:00:00.000Z'),
+      items: [
+        { description: 'Seed: dizajn i faqes', quantity: '2', unitPrice: '300.00' },
+        { description: 'Seed: hosting vjetor', quantity: '1', unitPrice: '120.00' },
+      ],
+    },
+    {
+      invoiceNumber: 'F-2026-0003',
+      clientEmail: 'klienti@profitx.local',
+      status: 'DRAFT',
+      issueDate: new Date('2026-02-10T00:00:00.000Z'),
+      items: [{ description: 'Seed: konsulence mujore', quantity: '3.5', unitPrice: '80.00' }],
+    },
+    {
+      invoiceNumber: 'F-2026-0004',
+      clientEmail: 'klienti@profitx.local',
+      status: 'OVERDUE',
+      issueDate: new Date('2026-01-05T00:00:00.000Z'),
+      dueDate: new Date('2026-01-20T00:00:00.000Z'),
+      items: [{ description: 'Seed: mirembajtje tremujore', quantity: '1', unitPrice: '450.00' }],
+    },
+  ];
+
+  for (const invoice of invoices) {
+    const existing = await prisma.invoice.findUnique({
+      where: {
+        userId_invoiceNumber: {
+          userId: user.id,
+          invoiceNumber: invoice.invoiceNumber,
+        },
+      },
+      select: { id: true },
+    });
+    if (existing) continue;
+
+    await prisma.invoice.create({
+      data: {
+        userId: user.id,
+        clientId: clientIds.get(invoice.clientEmail),
+        invoiceNumber: invoice.invoiceNumber,
+        status: invoice.status,
+        issueDate: invoice.issueDate,
+        dueDate: invoice.dueDate ?? null,
+        items: { create: invoice.items },
+      },
+    });
+  }
+
+  console.log('Seed-i përfundoi: 1 përdorues, 2 kategori, 2 klientë, 2 furnitorë, 2 transaksione dhe 4 fatura.');
   console.log(`Përdoruesi demonstrues: ${demoUser.email}`);
 }
 
