@@ -11,6 +11,7 @@
     "verify:categories": "node scripts/verify-categories.cjs",
     "verify:invoice-validation": "node scripts/verify-invoice-validation.cjs",
     "verify:invoice-rules": "node scripts/verify-invoice-rules.cjs",
+    "verify:invoices": "node scripts/verify-invoices-api.cjs",
     "postinstall": "prisma skills sync || exit 0",
     "db:check": "node scripts/db-check.cjs"
   },
