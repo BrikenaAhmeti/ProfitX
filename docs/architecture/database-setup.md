@@ -30,7 +30,7 @@ After configuring `backend/.env` and applying the database migration, run from `
 npm run db:seed
 ```
 
-The command creates or updates a demo account (`demo@profitx.local`), two categories, two clients, and two suppliers. The demo account password is `ProfitXDemo123!`; change it before using the account outside local testing. The seed uses unique keys to safely run more than once without duplicating records.
+The command creates or updates a demo account (`demo@profitx.local`), two categories, two clients, and two suppliers. The sections below also cover the seeded transactions and invoices. The demo account password is `ProfitXDemo123!`; change it before using the account outside local testing. The seed uses unique keys to safely run more than once without duplicating records.
 
 To verify the rows in Neon's SQL Editor, select database `profitx` and run:
 
@@ -91,3 +91,22 @@ ORDER BY t."occurredAt";
 ```
 
 The query should return one `INCOME` and one `EXPENSE` row. Run `npm run db:seed` twice and confirm the query still returns only those two rows.
+
+## Verify seeded invoices
+
+The demo seed adds four invoices for `demo@profitx.local`, each with at least one item, covering the `PAID`, `SENT`, `DRAFT`, and `OVERDUE` statuses. They use `Klienti Demo` and `Klienti Shembull` and fixed invoice numbers, so repeated seed runs skip existing ones instead of creating duplicates.
+
+In Neon's SQL Editor, confirm the invoices and item counts with:
+
+```sql
+SELECT i."invoiceNumber", i.status, i."issueDate", i."dueDate",
+       COUNT(ii.id) AS item_count
+FROM "Invoice" i
+JOIN "User" u ON u.id = i."userId"
+LEFT JOIN "InvoiceItem" ii ON ii."invoiceId" = i.id
+WHERE u.email = 'demo@profitx.local'
+GROUP BY i.id
+ORDER BY i."invoiceNumber";
+```
+
+The query should return four invoices (`F-2026-0001` to `F-2026-0004`) with five items in total. Run `npm run db:seed` twice and confirm the invoice and item counts stay the same.
