@@ -94,13 +94,25 @@ erDiagram
 - `clientId` and `supplierId` are nullable optional references. Deleting the linked client or supplier keeps the transaction and sets the corresponding reference to `NULL`.
 - The application-level convention is to associate income with a client and expenses with a supplier. The current schema does not enforce that pairing as a database constraint.
 
+## Invoice fields and relationships
+
+- `invoiceNumber` is required, stored as `VarChar(50)`, and unique per user through the compound unique constraint `(userId, invoiceNumber)`. Another user may reuse the same number.
+- `status` is required, uses `InvoiceStatus`, and defaults to `DRAFT`.
+- `issueDate` is required and stored as `DATE`; it defaults to the current date. `dueDate` is optional and stored as `DATE`. Both keep a date without a time component.
+- `clientId` is required and references one client of the same user. Deleting a client that still has invoices is restricted so invoice history remains valid.
+- `userId` is required. Deleting the owning user cascades to that user's invoices and their items.
+- The API requires at least one item per invoice. This rule is enforced by the service, not by a database constraint.
+- `InvoiceItem.description` is required and stored as `VarChar(300)`.
+- `InvoiceItem.quantity` is required and stored as `Decimal(12, 3)` with a default of `1.0`.
+- `InvoiceItem.unitPrice` is required and stored as `Decimal(12, 2)`.
+- Neither the line total nor the invoice total is stored; both are calculated from the item fields.
+
 ## Other relationships and delete behavior
 
 - `Client`, `Supplier`, `Category`, `Transaction`, and `Invoice` belong to one user. Deleting a user cascades to those owned records.
 - An invoice belongs to one client. Deleting a client with invoices is restricted so invoice history remains valid.
 - An invoice item belongs to one invoice. Deleting an invoice cascades to its items.
 - `passwordHash` stores a password hash, never a plain-text password.
-- An invoice item's line total is calculated as `quantity × unitPrice`; it is not stored separately.
 - Financial reports should count transactions as income or expenses. An invoice alone is not a recorded payment.
 
 ## Indexes in `schema.prisma`
