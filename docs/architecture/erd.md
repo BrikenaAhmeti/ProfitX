@@ -121,7 +121,7 @@ erDiagram
 - `Client` and `Supplier` have unique compound indexes on `(userId, email)` and regular indexes on `(userId, name)`. These support per-user email checks and user-scoped name listing. Their leading `userId` columns also support user-scoped lookups.
 - `Category` has a unique compound index on `(userId, name, type)`.
 - `Transaction` has indexes on `(userId, occurredAt)`, `(userId, type, occurredAt)`, and `categoryId`.
-- `Invoice` has a unique compound index on `(userId, invoiceNumber)` and an index on `(clientId, issueDate)`.
+- `Invoice` has a unique compound index on `(userId, invoiceNumber)` and indexes on `(clientId, issueDate)`, `(userId, status)`, and `(userId, dueDate)`. The last two support user-scoped filtering by status and due date.
 - `InvoiceItem` has an index on `invoiceId`.
 
 The compound indexes beginning with `userId` also serve queries filtering by `userId`; separate single-column indexes would duplicate those index prefixes.

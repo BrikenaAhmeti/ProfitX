@@ -123,6 +123,8 @@ model Invoice {
 
   @@unique([userId, invoiceNumber])
   @@index([clientId, issueDate])
+  @@index([userId, status])
+  @@index([userId, dueDate])
 }
 
 model InvoiceItem {
