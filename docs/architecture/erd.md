@@ -106,6 +106,21 @@ erDiagram
 - `InvoiceItem.quantity` is required and stored as `Decimal(12, 3)` with a default of `1.0`.
 - `InvoiceItem.unitPrice` is required and stored as `Decimal(12, 2)`.
 - Neither the line total nor the invoice total is stored; both are calculated from the item fields.
+- Invoice responses from POST, PUT, GET by ID, and GET list include `total` as a decimal string with two fractional digits. Each item's `quantity * unitPrice` is rounded to cents (half up), then those line amounts are summed. Integer arithmetic preserves the full precision of the schema; a client-supplied `total` is ignored.
+
+## Invoice status transitions
+
+| Current status | Allowed next statuses |
+| --- | --- |
+| `DRAFT` | `SENT`, `CANCELLED` |
+| `SENT` | `PAID`, `OVERDUE`, `CANCELLED` |
+| `OVERDUE` | `PAID`, `CANCELLED` |
+| `PAID` | None |
+| `CANCELLED` | None |
+
+PUT may repeat the current status or omit it. Other transitions return `400` with a clear message and a `status` entry in `errors[]`; no invoice or item changes are saved. Status changes check the previous status again at write time to reject stale concurrent requests. Creation defaults to `DRAFT` and continues to accept an explicitly supplied valid initial status.
+
+Verify validation and these rules from `backend` with `npm run verify:invoice-validation` and `npm run verify:invoice-rules`. Both use real HTTP routes, JWT, middleware, controllers, and services with simulated Prisma storage, requiring no `.env` or live database.
 
 ## Other relationships and delete behavior
 

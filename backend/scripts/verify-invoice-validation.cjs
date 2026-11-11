@@ -95,7 +95,9 @@ async function main() {
         assert.equal(writes, before + 1);
         assert.equal(result.data.invoice.userId, userId);
         assert(result.data.invoice.items.length > 0);
-        assert.deepEqual(result.data.invoice, JSON.parse(JSON.stringify(invoices.get(result.data.invoice.id))));
+        const { total, ...storedFields } = result.data.invoice;
+        assert.match(total, /^\d+\.\d{2}$/);
+        assert.deepEqual(storedFields, JSON.parse(JSON.stringify(invoices.get(result.data.invoice.id))));
       }
       checks++;
       return result.data?.invoice;

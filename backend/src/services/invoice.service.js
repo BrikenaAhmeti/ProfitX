@@ -6,6 +6,13 @@ const ITEM_DESCRIPTION_MAX_LENGTH = 300;
 const MAX_QUANTITY = 999999999.999;
 const MAX_UNIT_PRICE = 9999999999.99;
 const INVOICE_STATUSES = ['DRAFT', 'SENT', 'PAID', 'OVERDUE', 'CANCELLED'];
+const STATUS_TRANSITIONS = {
+  DRAFT: ['SENT', 'CANCELLED'],
+  SENT: ['PAID', 'OVERDUE', 'CANCELLED'],
+  OVERDUE: ['PAID', 'CANCELLED'],
+  PAID: [],
+  CANCELLED: [],
+};
 
 const INVOICE_NOT_FOUND = 'Fatura nuk u gjet';
 const CLIENT_NOT_AVAILABLE = 'Klienti nuk ekziston ose nuk i perket perdoruesit te kycur';
@@ -93,6 +100,30 @@ function normalizeStatus(status) {
   }
 
   return status.trim().toUpperCase();
+}
+
+function assertStatusTransition(currentStatus, nextStatus) {
+  if (nextStatus === undefined || nextStatus === currentStatus) return;
+  if (!STATUS_TRANSITIONS[currentStatus]?.includes(nextStatus)) {
+    const message = `Kalimi i statusit nga ${currentStatus} ne ${nextStatus} nuk lejohet.`;
+    throw new ApiError(400, message, [{ field: 'status', message }]);
+  }
+}
+
+function decimalToUnits(value, scale) {
+  const [whole, fraction = ''] = value.toString().split('.');
+  return BigInt(`${whole}${fraction.padEnd(scale, '0')}`);
+}
+
+/** Totali llogaritet nga artikujt; cdo rresht rrumbullakohet ne cent (gjysma lart). */
+function withTotal(invoice) {
+  const cents = invoice.items.reduce((sum, item) => {
+    const quantity = decimalToUnits(item.quantity, 3);
+    const unitPrice = decimalToUnits(item.unitPrice, 2);
+    return sum + (quantity * unitPrice + 500n) / 1000n;
+  }, 0n);
+
+  return { ...invoice, total: `${cents / 100n}.${String(cents % 100n).padStart(2, '0')}` };
 }
 
 function buildItemData(item, index) {
@@ -252,11 +283,12 @@ function handlePrismaError(error) {
  * Kthen vetem faturat e perdoruesit te kycur, me te rejat e para.
  */
 async function list(userId) {
-  return prisma.invoice.findMany({
+  const invoices = await prisma.invoice.findMany({
     where: { userId },
     include: { items: true },
     orderBy: [{ issueDate: 'desc' }, { createdAt: 'desc' }],
   });
+  return invoices.map(withTotal);
 }
 
 /**
@@ -274,7 +306,7 @@ async function getById(userId, id) {
     throw new ApiError(404, INVOICE_NOT_FOUND);
   }
 
-  return invoice;
+  return withTotal(invoice);
 }
 
 /**
@@ -293,7 +325,7 @@ async function create(userId, data) {
   assertDateOrder(effectiveIssueDate, invoiceData.dueDate);
 
   try {
-    return await prisma.invoice.create({
+    const invoice = await prisma.invoice.create({
       data: {
         ...invoiceData,
         userId,
@@ -301,6 +333,7 @@ async function create(userId, data) {
       },
       include: { items: true },
     });
+    return withTotal(invoice);
   } catch (error) {
     return handlePrismaError(error);
   }
@@ -316,6 +349,7 @@ async function update(userId, id, data) {
 
   const payload = buildInvoiceData(data);
   requireInvoiceFields(payload, { partial: true });
+  assertStatusTransition(existing.status, payload.status);
 
   if (payload.clientId !== undefined) {
     await assertOwnedClient(userId, payload.clientId);
@@ -328,15 +362,24 @@ async function update(userId, id, data) {
   const { items, ...invoiceData } = payload;
 
   try {
-    return await prisma.invoice.update({
-      where: { id },
+    const invoice = await prisma.invoice.update({
+      // Statusi kontrollohet edhe gjate shkrimit, qe nje kerkese paralele te mos e anashkaloje rregullin.
+      where: { id, userId, ...(payload.status !== undefined ? { status: existing.status } : {}) },
       data: {
         ...invoiceData,
         ...(items !== undefined ? { items: { deleteMany: {}, create: items } } : {}),
       },
       include: { items: true },
     });
+    return withTotal(invoice);
   } catch (error) {
+    if (error.code === 'P2025' && payload.status !== undefined) {
+      const current = await prisma.invoice.findFirst({ where: { id, userId }, select: { id: true } });
+      if (current) {
+        const message = 'Statusi i fatures ka ndryshuar. Rifreskoni faturen dhe provoni perseri.';
+        throw new ApiError(400, message, [{ field: 'status', message }]);
+      }
+    }
     return handlePrismaError(error);
   }
 }

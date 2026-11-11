@@ -2,7 +2,7 @@ const invoiceService = require('../services/invoice.service');
 
 /**
  * GET /api/invoices
- * Pergjigje sukses: vetem faturat e perdoruesit te kycur, bashke me artikujt.
+ * Pergjigje sukses: faturat e perdoruesit, me artikujt dhe totalin e llogaritur ne server.
  */
 async function list(req, res, next) {
   try {
@@ -19,6 +19,7 @@ async function list(req, res, next) {
 
 /**
  * GET /api/invoices/:id
+ * data.invoice.total eshte tekst decimal me dy shifra pas presjes.
  */
 async function getById(req, res, next) {
   try {
@@ -35,7 +36,7 @@ async function getById(req, res, next) {
 
 /**
  * POST /api/invoices
- * Pergjigje sukses: 201 dhe fatura e krijuar bashke me artikujt.
+ * Pergjigje sukses: 201 dhe fatura me artikujt dhe totalin e llogaritur ne server.
  */
 async function create(req, res, next) {
   try {
@@ -53,6 +54,7 @@ async function create(req, res, next) {
 
 /**
  * PUT /api/invoices/:id
+ * Kthen totalin e rillogaritur; kalimi i palejuar i statusit kthen 400 me errors[].
  */
 async function update(req, res, next) {
   try {
